@@ -274,8 +274,13 @@
                 <div class="calendar-header">
                     <h2 class="calendar-title">Agende seu Horário</h2>
                     <div class="calendar-nav">
-                        <button class="prev-month"><i class="fas fa-chevron-left"></i></button>
-                        <button class="next-month"><i class="fas fa-chevron-right"></i></button>
+                        <button class="prev-month" aria-label="Mês anterior">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <span class="current-month">Março 2024</span>
+                        <button class="next-month" aria-label="Próximo mês">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="weekday-headers">
@@ -288,14 +293,14 @@
                     <div class="weekday-header">Sáb</div>
                 </div>
                 <div class="calendar-grid">
-                    <!-- Dias serão inseridos via JavaScript -->
+                    <!-- Os dias serão inseridos via JavaScript -->
                 </div>
             </div>
 
             <div class="time-section">
                 <h3>Horários Disponíveis</h3>
                 <div class="time-slots">
-                    <!-- Horários serão inseridos via JavaScript -->
+                    <!-- Os horários serão inseridos via JavaScript -->
                 </div>
             </div>
 
@@ -304,17 +309,22 @@
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
                 <h2>Complete seu Agendamento</h2>
-                <input type="text" name="name" placeholder="Seu Nome" required>
-                <input type="tel" name="phone" placeholder="Seu Telefone" required>
-                <input type="email" name="email" placeholder="Seu Email" required>
-                <select name="service" required>
-                    <option value="">Selecione o Serviço</option>
-                    <option value="design">Design de Sobrancelhas</option>
-                    <option value="micropigmentacao">Micropigmentação</option>
-                    <option value="henna">Design com Henna</option>
-                </select>
-                <textarea name="notes" placeholder="Observações (opcional)"></textarea>
-                <button type="submit">Confirmar Agendamento</button>
+                <form id="appointmentForm">
+                    <input type="text" name="name" placeholder="Seu Nome" required>
+                    <input type="tel" name="phone" placeholder="Seu Telefone" required>
+                    <input type="email" name="email" placeholder="Seu Email" required>
+                    <select name="service" required>
+                        <option value="">Selecione o Serviço</option>
+                        <option value="Design de Sobrancelhas">Design de Sobrancelhas</option>
+                        <option value="Micropigmentação">Micropigmentação</option>
+                        <option value="Design com Henna">Design com Henna</option>
+                    </select>
+                    <textarea name="notes" placeholder="Observações (opcional)"></textarea>
+                    <button type="submit" class="submit-button">
+                        <i class="fab fa-whatsapp"></i>
+                        Confirmar via WhatsApp
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -471,6 +481,192 @@
     <!-- Pinterest Script -->
     <script async defer src="//assets.pinterest.com/js/pinit.js"></script>
 
-    <script src="script.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Seleciona todos os elementos que devem abrir o modal
+        const bookingTriggers = document.querySelectorAll('[data-booking]');
+        const modal = document.querySelector('.booking-modal');
+        const closeModal = document.querySelector('.close-modal');
+        const backToCalendar = document.querySelector('.back-to-calendar');
+        const calendarSection = document.querySelector('.calendar-section');
+        const bookingForm = document.querySelector('.booking-form');
+
+        // Função para abrir o modal
+        function openModal() {
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+                modal.querySelector('.modal-content').style.transform = 'scale(1)';
+                modal.querySelector('.modal-content').style.opacity = '1';
+            }, 10);
+        }
+
+        // Função para fechar o modal
+        function closeModalFunction() {
+            modal.classList.remove('active');
+            modal.querySelector('.modal-content').style.transform = 'scale(0.95)';
+            modal.querySelector('.modal-content').style.opacity = '0';
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Reset form view
+                calendarSection.style.display = 'block';
+                bookingForm.classList.remove('active');
+            }, 300);
+        }
+
+        // Adiciona evento de clique para todos os triggers
+        bookingTriggers.forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.preventDefault();
+                openModal();
+            });
+        });
+
+        // Fecha o modal ao clicar no X
+        closeModal.addEventListener('click', closeModalFunction);
+
+        // Fecha o modal ao clicar fora dele
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModalFunction();
+            }
+        });
+
+        // Volta para o calendário
+        if (backToCalendar) {
+            backToCalendar.addEventListener('click', function() {
+                bookingForm.classList.remove('active');
+                calendarSection.style.display = 'block';
+            });
+        }
+
+        // Simulação do calendário
+        const calendarGrid = document.querySelector('.calendar-grid');
+        const timeSlots = document.querySelector('.time-slots');
+        
+        // Gera o calendário
+        function generateCalendar() {
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+            
+            // Limpa o calendário
+            calendarGrid.innerHTML = '';
+            
+            // Adiciona os dias vazios no início
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'calendar-day disabled';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Adiciona os dias do mês
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = day;
+                
+                // Marca o dia atual
+                if (day === today.getDate()) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Adiciona evento de clique
+                dayElement.addEventListener('click', function() {
+                    document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('selected'));
+                    this.classList.add('selected');
+                    generateTimeSlots();
+                });
+                
+                calendarGrid.appendChild(dayElement);
+            }
+        }
+        
+        // Gera horários disponíveis
+        function generateTimeSlots() {
+            timeSlots.innerHTML = '';
+            const hours = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'];
+            
+            hours.forEach(hour => {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = hour;
+                
+                slot.addEventListener('click', function() {
+                    document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+                    this.classList.add('selected');
+                    showBookingForm();
+                });
+                
+                timeSlots.appendChild(slot);
+            });
+        }
+        
+        // Mostra o formulário de agendamento
+        function showBookingForm() {
+            calendarSection.style.display = 'none';
+            bookingForm.style.display = 'flex';
+            setTimeout(() => {
+                bookingForm.classList.add('active');
+            }, 10);
+        }
+        
+        // Inicializa o calendário
+        if (calendarGrid) {
+            generateCalendar();
+        }
+
+        // Adiciona manipulador do formulário
+        const appointmentForm = document.querySelector('#appointmentForm');
+        
+        appointmentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Coleta os dados do formulário
+            const name = this.querySelector('[name="name"]').value;
+            const phone = this.querySelector('[name="phone"]').value;
+            const email = this.querySelector('[name="email"]').value;
+            const service = this.querySelector('[name="service"]').value;
+            const notes = this.querySelector('[name="notes"]').value;
+            
+            // Pega a data e hora selecionadas
+            const selectedDay = document.querySelector('.calendar-day.selected');
+            const selectedTime = document.querySelector('.time-slot.selected');
+            
+            if (!selectedDay || !selectedTime) {
+                alert('Por favor, selecione uma data e horário.');
+                return;
+            }
+
+            // Formata a data selecionada
+            const day = selectedDay.textContent;
+            const month = currentDate.getMonth() + 1;
+            const year = currentDate.getFullYear();
+            const dateStr = `${day}/${month}/${year}`;
+            
+            // Monta a mensagem para o WhatsApp
+            const message = `*Novo Agendamento - Studio Gaby Xavier*
+📅 Data: ${dateStr}
+⏰ Horário: ${selectedTime.textContent}
+👤 Nome: ${name}
+📱 Telefone: ${phone}
+📧 Email: ${email}
+💇‍♀️ Serviço: ${service}
+📝 Observações: ${notes}`;
+
+            // Codifica a mensagem para URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Monta o link do WhatsApp
+            const whatsappLink = `https://wa.me/5511973119019?text=${encodedMessage}`;
+            
+            // Fecha o modal
+            closeModalFunction();
+            
+            // Abre o WhatsApp em uma nova janela
+            window.open(whatsappLink, '_blank');
+        });
+    });
+    </script>
 </body>
 </html> 
